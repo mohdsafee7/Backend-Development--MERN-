@@ -1,0 +1,94 @@
+
+`chatRoom.js` is a class that represents a chat room. 
+It extends the `EventEmitter` class from the Node.js events module. 
+The chat room has three methods: `join`, `sendMessage`, and `leave`. 
+
+- The `join` method adds a user to the `users` set and emits a `join` event with the user as the argument.
+- The `sendMessage` method validates if the user is in the chat room and emits a `message` event with the user and message as arguments.
+- The `leave` method removes a user from the `users` set and emits a `leave` event with the user as the argument.
+
+`driver.js` is a file that simulates the usage of the `ChatRoom` class. It creates an instance of the `ChatRoom` class and registers event listeners for the `join`, `message`, and `leave` events. 
+
+- It then simulates users joining the chat room and sending messages.
+- It also demonstrates how to handle errors when a user tries to send a message while not in the chat room.
+- Finally, it simulates users leaving the chat room.
+
+
+
+This code simulates a chat room using the `ChatRoom` class in `chatRoom.js`. 
+
+`chatRoom.js` is a class that extends the `EventEmitter` class from the Node.js events module. It has three methods: `join`, `sendMessage`, and `leave`.
+
+- The `join` method adds a user to the `users` set and emits a `join` event with the user as the argument.
+- The `sendMessage` method validates if the user is in the chat room and emits a `message` event with the user and message as arguments.
+- The `leave` method removes a user from the `users` set and emits a `leave` event with the user as the argument.
+
+`driver.js` is a file that simulates the usage of the `ChatRoom` class. It creates an instance of the `ChatRoom` class and registers event listeners for the `join`, `message`, and `leave` events.
+
+- It then simulates users joining the chat room and sending messages.
+- It also demonstrates how to handle errors when a user tries to send a message while not in the chat room.
+- Finally, it simulates users leaving the chat room.
+
+Here's the code:
+
+
+// chatRoom.js
+const EventEmitter = require('node:events');
+
+class ChatRoom extends EventEmitter {
+  constructor(){
+    super()
+    this.users = new Set();
+  }
+
+  join(user){
+    this.users.add(user);
+    this.emit('join', user);
+  }
+
+  sendMessage(user, message){
+    //validate the user first
+    if(this.users.has(user)){
+      this.emit('message', user, message)
+    }else{
+      console.log(`${user} is not in the chat`);
+    }
+  }
+
+  leave(user){
+    if(this.users.has(user)){
+      this.users.delete(user);
+      this.emit('leave', user);
+    }else{
+      console.log(`${user} is not in the chat`);
+    }
+  }
+}
+
+// driver.js
+const chat = new ChatRoom();
+
+chat.on('join', (user)=>{
+  console.log(`${user} has just joined the chat.`);
+})
+
+chat.on('message', (user, message)=>{
+  console.log(`${user} : ${message}`);
+})
+
+chat.on('leave', (user)=>{
+  console.log(`${user} left the chat`);
+});
+
+
+//simulating the chat
+
+chat.join('Safee')
+chat.join('Magnet')
+
+chat.sendMessage('Safee', 'Hey, How are you!');
+chat.sendMessage('Magnet', 'I am fine, Aap kaise h.')
+
+chat.leave('Safee')
+chat.sendMessage('Safee', 'This message will not be sent bcz Safee left the chat.')
+chat.leave('Magnet')
