@@ -66,13 +66,14 @@ app.delete('/books/:id', (req, res)=>{
   if(isNaN(id))
     return res.status(400).json({error : 'Id must be an Integer'});
 
-  const idxToDelete = books.find(e => e.id === id);
+  const idxToDelete = books.findIndex(e => e.id === id);
 
-  if(idxToDelete < 0){
+  if(idxToDelete === -1){
     return res
       .status(404)
       .json({error : `Book with id: ${id} doesn't exist.`});
   }
+
   books.splice(idxToDelete, 1);
 
   return res.status(200).json({message : 'Book Deleted.'})
