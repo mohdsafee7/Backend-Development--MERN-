@@ -10,11 +10,35 @@ const books = [
   {id : 4, title : "In Search of Tamba", author : "Pappu Bhaiya"}
 ];
 
+function loggerMiddlware(req, res, next){
+  console.log('This is middleware A.');
+  next();
+}
+
+function customMiddleware(req, res, next){
+  console.log('This is middlware B.');
+  next();
+}
 const app = express();
 
+//middleware
+app.use(loggerMiddlware);
 
-//Middleware (plugins)
+//Middleware (plugins), Global Middlewares, run everytime
 app.use(express.json()); 
+// app.use(customMiddleware);
+
+
+//GET, POST, any request on /books, this middlware is going to run
+// app.use('/books', (req,res,next)=>{...})
+
+
+
+
+
+
+
+
 
 app.get('/books', (req,res)=>{
   // res.writeHead
@@ -24,7 +48,7 @@ app.get('/books', (req,res)=>{
 });
 
 //Dynamic Routing
-app.get('/books/:id', (req,res)=>{
+app.get('/books/:id',customMiddleware, (req,res)=>{ //here customMiddleware -- route level middlware
   const id = parseInt(req.params.id);
 
   if(isNaN(id))
