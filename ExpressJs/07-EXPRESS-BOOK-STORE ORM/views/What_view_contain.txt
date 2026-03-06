@@ -1,0 +1,4 @@
+The views file contais all the things what user actually sees
+-React
+-HTML, CSS, JS
+-Static
