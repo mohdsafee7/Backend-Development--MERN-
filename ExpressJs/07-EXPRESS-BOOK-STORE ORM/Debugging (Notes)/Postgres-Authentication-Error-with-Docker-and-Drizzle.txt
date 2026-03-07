@@ -1,0 +1,216 @@
+# Debugging PostgreSQL Authentication Error with Docker and Drizzle
+
+## Problem
+
+While connecting a Node.js application (using **Drizzle ORM**) to a PostgreSQL database running inside **Docker**, the following error appeared:
+
+```
+error: password authentication failed for user "postgres"
+code: '28P01'
+routine: 'auth_failed'
+```
+
+Earlier attempts also produced errors like:
+
+```
+password authentication failed for user "postgres1"
+role "postgres" does not exist
+role "root" does not exist
+```
+
+Even after:
+
+* Resetting containers
+* Deleting Docker volumes
+* Recreating the database
+* Updating environment variables
+
+the authentication error continued.
+
+---
+
+# Root Cause
+
+The system had **two PostgreSQL servers running simultaneously**:
+
+1. **Local PostgreSQL installation on Windows**
+2. **PostgreSQL running inside Docker**
+
+Both were listening on the **same port (5432)**.
+
+When the application attempted to connect using:
+
+```
+localhost:5432
+```
+
+it sometimes connected to the **local PostgreSQL instance instead of the Docker container**.
+
+Since the **users and passwords were different**, authentication failed.
+
+---
+
+# How the Issue Was Diagnosed
+
+The following command was used:
+
+```
+netstat -ano | findstr :5432
+```
+
+Output:
+
+```
+TCP    0.0.0.0:5432    LISTENING    1388
+TCP    0.0.0.0:5432    LISTENING    7252
+```
+
+This indicated **two processes were listening on port 5432**.
+
+To identify them:
+
+```
+tasklist | findstr 1388
+tasklist | findstr 7252
+```
+
+One of them corresponded to **local PostgreSQL (postgres.exe)**.
+
+---
+
+# Solution
+
+The easiest and safest solution was to **change the Docker PostgreSQL port**.
+
+## 1. Update `docker-compose.yml`
+
+```
+services:
+  postgres:
+    image: postgres:17.4
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: bookstore
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+```
+
+This means:
+
+```
+Host Machine Port : 5433
+Container Port    : 5432
+```
+
+---
+
+## 2. Restart Docker Containers
+
+```
+docker compose down -v
+docker compose up -d
+```
+
+The `-v` flag removes the **old database volume** to ensure a fresh initialization.
+
+---
+
+## 3. Update Database Connection URL
+
+In `.env`:
+
+```
+DATABASE_URL=postgres://postgres:admin@localhost:5433/bookstore
+```
+
+---
+
+## 4. Run Drizzle Again
+
+```
+npx drizzle-kit studio
+```
+
+Now the application correctly connects to the **Docker PostgreSQL container**.
+
+---
+
+# Key Learning Points
+
+### 1. Docker Volumes Store Database State
+
+Changing environment variables such as:
+
+```
+POSTGRES_USER
+POSTGRES_PASSWORD
+```
+
+does not update credentials if the database volume already exists.
+
+You must reset using:
+
+```
+docker compose down -v
+```
+
+---
+
+### 2. Port Conflicts Are Common
+
+If **two databases listen on the same port**, the application may connect to the wrong one.
+
+Typical scenario:
+
+| Service           | Port |
+| ----------------- | ---- |
+| Local PostgreSQL  | 5432 |
+| Docker PostgreSQL | 5432 |
+
+Fix by changing Docker port to **5433**.
+
+---
+
+### 3. Always Verify Running Services
+
+Useful debugging commands:
+
+Check running containers:
+
+```
+docker ps
+```
+
+Check port usage:
+
+```
+netstat -ano | findstr :5432
+```
+
+Identify processes:
+
+```
+tasklist | findstr <PID>
+```
+
+---
+
+# Recommended Development Setup
+
+| Service           | Port |
+| ----------------- | ---- |
+| Local PostgreSQL  | 5432 |
+| Docker PostgreSQL | 5433 |
+
+Connection string:
+
+```
+postgres://postgres:admin@localhost:5433/bookstore
+```
+
+---
+
+# Final Result
+
+After changing the Docker port and updating the connection string, the PostgreSQL authentication issue was resolved successfully.

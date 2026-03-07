@@ -1,0 +1,22 @@
+# Useful Backend Debugging Commands
+
+## Check running docker containers
+docker ps
+
+## Stop docker containers
+docker compose down
+
+## Remove docker volumes
+docker compose down -v
+
+## See container logs
+docker compose logs postgres
+
+## Check port usage
+netstat -ano | findstr :5432
+
+## Identify process using port
+tasklist | findstr <PID>
+
+## Connect to postgres container
+docker exec -it <container-name> psql -U postgres -d bookstore

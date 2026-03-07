@@ -1,6 +1,7 @@
 
 const {pgTable, integer, varchar, uuid, text} = require('drizzle-orm/pg-core');
 const authorsTable = require('./author.schema')
+
 const booksTable = pgTable('books', {
   id: uuid().primaryKey().defaultRandom(),
   title: varchar({length: 100}).notNull(),
