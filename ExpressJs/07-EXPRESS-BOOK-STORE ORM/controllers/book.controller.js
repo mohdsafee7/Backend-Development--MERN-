@@ -8,9 +8,19 @@ Each function interacts with the PostgreSQL database through Drizzle queries and
 const { table } = require('console');
 const {booksTable} = require('../models/book.schema');
 const db = require('../src/index');
-const { eq } = require('drizzle-orm');
+const { eq , ilike } = require('drizzle-orm');
+const { sql } = require('drizzle-orm');
 
 exports.getAllBooks = async function(req,res){
+  const search = req.query.search;
+  // console.log({search});
+
+  if(search){
+    const books = await db.select().from(booksTable)
+    .where(sql`to_tsvector('english', ${booksTable.title}) @@ plainto_tsquery('english', ${search})`);
+    return res.json(books);
+  }
+  
   const books = await db.select().from(booksTable);
   return res.json(books);
 }
