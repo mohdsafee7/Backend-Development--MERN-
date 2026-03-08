@@ -1,17 +1,29 @@
-const {BOOK} = require('../models/books')
+/*
+This controller handles CRUD operations for books using Drizzle ORM.
+I created functions to fetch all books, fetch a book by ID, insert a new book, and delete a book.
+Each function interacts with the PostgreSQL database through Drizzle queries and returns JSON responses with proper HTTP status codes."
+*/
 
-exports.getAllBooks = function(req,res){
-  res.json(BOOK);
+
+const { table } = require('console');
+const {booksTable} = require('../models/book.schema');
+const db = require('../src/index');
+const { eq } = require('drizzle-orm');
+
+exports.getAllBooks = async function(req,res){
+  const books = await db.select().from(booksTable);
+  return res.json(books);
 }
 
 
-exports.getBookById = (req,res)=>{ //here customMiddleware -- route level middlware
-  const id = parseInt(req.params.id);
+exports.getBookById = async (req,res)=>{ //here customMiddleware -- route level middlware
+  const id = req.params.id;
 
-  if(isNaN(id))
-    return res.status(400).json({error : 'Id must be an Integer'});
-
-  const book = BOOK.find(e => e.id === id);
+  const [book] = await db
+    .select()
+    .from(booksTable)
+    .where((table) => eq(table.id, id))
+    .limit(1)
 
   if(!book)
     return res
@@ -21,40 +33,29 @@ exports.getBookById = (req,res)=>{ //here customMiddleware -- route level middlw
   return res.json(book);
 };
 
-exports.createBook = (req, res)=>{
-  // console.log(req.headers);
-  // console.log(req.body);
-  const {title, author} = req.body;
+exports.createBook =async (req, res)=>{
+  const {title, authorId, description} = req.body;
 
   if(!title || title === '')
     return res.status(400).json({error : 'title is required'})
 
-  if(!author || author === '')
-    return res.status(400).json({error : 'author is required'})
+  const [result] = await db
+    .insert(booksTable).values({
+      title,
+      authorId,
+      description,
+    }).returning({
+      id: booksTable.id,
+    })
 
-  const id = BOOK.length + 1;
-  const book = {id, title, author};
-  BOOK.push(book);
-
-  res.status(201).json({message : 'New book is created', id})
+  res.status(201).json({message : 'New book is created', id: result.id})
   
 }
 
-exports.deleteBookById = (req, res)=>{
-  const id = parseInt(req.params.id);
+exports.deleteBookById =async (req, res)=>{
+  const id = req.params.id;
 
-  if(isNaN(id))
-    return res.status(400).json({error : 'Id must be an Integer'});
-
-  const idxToDelete = BOOK.findIndex(e => e.id === id);
-
-  if(idxToDelete === -1){
-    return res
-      .status(404)
-      .json({error : `Book with id: ${id} doesn't exist.`});
-  }
-
-  BOOK.splice(idxToDelete, 1);
+  await db.delete(booksTable).where(eq(booksTable.id, id));
 
   return res.status(200).json({message : 'Book Deleted.'})
 };
