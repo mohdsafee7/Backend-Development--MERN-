@@ -5,7 +5,6 @@ Each function interacts with the PostgreSQL database through Drizzle queries and
 */
 
 
-const { table } = require('console');
 const {booksTable} = require('../models/book.schema');
 const db = require('../src/index');
 const { eq , ilike } = require('drizzle-orm');
@@ -20,7 +19,17 @@ exports.getAllBooks = async function(req,res){
     .where(sql`to_tsvector('english', ${booksTable.title}) @@ plainto_tsquery('english', ${search})`);
     return res.json(books);
   }
-  
+
+/*
+Here's a breakdown of what's happening:
+1. `sql` is a function from the `drizzle-orm` library that allows you to write SQL queries in a more readable way.
+2. The `to_tsvector('english', ${booksTable.title})` function creates a text search vector from the `title` field of the `booksTable`.
+3. The `@@` operator performs a full-text search on the text search vector.
+4. The `plainto_tsquery('english', ${search})` function converts the search query into a text search query.
+5. The `where` clause filters the `booksTable` to only include rows where the text search vector matches the search query.
+
+So, if the `search` query is not empty, it will perform a full-text search on the `title` field of the `booksTable` and return the matching books in JSON format.
+*/
   const books = await db.select().from(booksTable);
   return res.json(books);
 }
