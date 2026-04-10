@@ -1,0 +1,16 @@
+{
+	"type": "module",
+	"scripts": {
+		"dev": "node --watch index.js"
+	},
+	"dependencies": {
+		"dotenv": "^17.4.1",
+		"express": "~4.22.1",
+		"init": "^0.1.2",
+		"mongoose": "^9.4.1"
+	},
+	"devDependencies": {
+		"@types/express": "~4.17.25",
+		"@types/node": "^25.6.0"
+	}
+}
