@@ -2,7 +2,7 @@ import express from 'express';
 import { signupPostRequestBodySchema, loginPostRequesBodySchema } from '../validations/request.validation.js';
 import {hashPasswordwithSalt} from '../utils/hash.js';
 import { getUserByEmail, createUser } from '../services/user.services.js';
-import jwt from 'jsonwebtoken';
+import { createUserToken } from '../utils/token.js';
 
 const router = express.Router();
 
@@ -59,7 +59,7 @@ router.post('/login', async (req, res) =>{
   }
 
   //auth jwt
-  const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const token = await createUserToken({ id: user.id });
 
   return res.status(200).json({ data: { token } });
 })
