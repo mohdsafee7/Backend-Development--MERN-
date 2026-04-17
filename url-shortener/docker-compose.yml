@@ -1,0 +1,15 @@
+services:
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: mag@123
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5433:5432" #maps the host's port 5433 to the container's port 5432.
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
